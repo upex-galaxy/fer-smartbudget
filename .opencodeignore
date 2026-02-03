@@ -1,0 +1,52 @@
+# OpenCode ignore file
+# Solo ignora lo realmente necesario, NO las carpetas de configuración del proyecto
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Test outputs
+test-results/
+playwright-report/
+allure-results/
+allure-report/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files (seguridad)
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git internals (solo objetos pesados)
+.git/objects/
+.git/logs/
+
+# Backups
+.backups/
+
+# IMPORTANTE: NO ignorar carpetas de configuración del proyecto
+# Estas deben ser visibles para OpenCode
+!.context/
+!.prompts/
+!.books/
+!.vscode/
+!.husky/
+!.editorconfig
+!.prettierrc
+!.prettierignore
