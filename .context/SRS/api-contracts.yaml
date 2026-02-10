@@ -1,0 +1,1595 @@
+openapi: 3.0.3
+info:
+  title: BajaNumeros API
+  version: 1.0.0
+  description: API para convertir audios de WhatsApp en presupuestos estructurados, editables y exportables.
+servers:
+  - url: http://localhost:3000
+    description: Development
+  - url: https://staging.example.com
+    description: Staging
+  - url: https://api.example.com
+    description: Production
+tags:
+  - name: Auth
+  - name: Profile
+  - name: AudioJobs
+  - name: Budgets
+  - name: Exports
+  - name: Deliveries
+  - name: Usage
+  - name: Subscription
+  - name: Billing
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: ramon@example.com
+              password: Passw0rd!
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout user session
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessOnlyResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access session using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Session refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshSessionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/profile/preferences:
+    get:
+      tags: [Profile]
+      summary: Get user preferences
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Preferences found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ProfilePreferences'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Profile]
+      summary: Update user preferences
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePreferencesRequest'
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ProfilePreferences'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/audio-jobs:
+    post:
+      tags: [AudioJobs]
+      summary: Upload WhatsApp audio and create processing job
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAudioJobRequest'
+      responses:
+        '202':
+          description: Job accepted and queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AudioJob'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/audio-jobs/{jobId}:
+    get:
+      tags: [AudioJobs]
+      summary: Get processing job status
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JobIdPath'
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AudioJobStatus'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/audio-jobs/{jobId}/retry:
+    post:
+      tags: [AudioJobs]
+      summary: Retry failed processing job
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JobIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetryAudioJobRequest'
+      responses:
+        '200':
+          description: Retry accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AudioJob'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/budgets:
+    get:
+      tags: [Budgets]
+      summary: List budgets with optional filters
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/BudgetStatus'
+        - $ref: '#/components/parameters/SupplierName'
+      responses:
+        '200':
+          description: Budgets list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BudgetSummary'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Budgets]
+      summary: Create manual budget draft
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBudgetRequest'
+      responses:
+        '201':
+          description: Budget created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Budget'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/budgets/{budgetId}:
+    get:
+      tags: [Budgets]
+      summary: Get budget detail
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BudgetIdPath'
+      responses:
+        '200':
+          description: Budget found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Budget'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags: [Budgets]
+      summary: Update budget and item fields
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BudgetIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBudgetRequest'
+      responses:
+        '200':
+          description: Budget updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Budget'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/budgets/{budgetId}/versions:
+    post:
+      tags: [Budgets]
+      summary: Save budget version snapshot
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BudgetIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBudgetVersionRequest'
+      responses:
+        '201':
+          description: Version saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/BudgetVersion'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/budgets/{budgetId}/duplicate:
+    post:
+      tags: [Budgets]
+      summary: Duplicate budget
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BudgetIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DuplicateBudgetRequest'
+      responses:
+        '201':
+          description: Budget duplicated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/DuplicateBudgetResponseData'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/budgets/{budgetId}/export/excel:
+    post:
+      tags: [Exports]
+      summary: Export budget to Excel
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BudgetIdPath'
+      responses:
+        '201':
+          description: Excel export generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ExportResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/budgets/{budgetId}/export/google-sheets:
+    post:
+      tags: [Exports]
+      summary: Export budget to Google Sheets (Pro+)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BudgetIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleSheetsExportRequest'
+      responses:
+        '201':
+          description: Google Sheets export generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ExportResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/budgets/{budgetId}/deliveries:
+    post:
+      tags: [Deliveries]
+      summary: Deliver exported budget via email or share link
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/BudgetIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDeliveryRequest'
+      responses:
+        '201':
+          description: Delivery created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Delivery'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/usage:
+    get:
+      tags: [Usage]
+      summary: Get current usage and quota
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usage details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UsageSummary'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/subscription/payment-methods:
+    get:
+      tags: [Subscription]
+      summary: List available payment methods for current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment methods available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      methods:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PaymentMethodOption'
+                      defaultMethod:
+                        type: string
+                        nullable: true
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/subscription/payment-methods/default:
+    put:
+      tags: [Subscription]
+      summary: Set default payment method for subscription checkout
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDefaultPaymentMethodRequest'
+      responses:
+        '200':
+          description: Default payment method updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessOnlyResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/subscription/checkout-link:
+    post:
+      tags: [Subscription]
+      summary: Create hosted checkout link for subscription payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCheckoutLinkRequest'
+      responses:
+        '201':
+          description: Checkout link created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutLinkResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/subscription:
+    get:
+      tags: [Subscription]
+      summary: Get active subscription
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Subscription details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/subscription/change-plan:
+    post:
+      tags: [Subscription]
+      summary: Change subscription plan state after successful payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePlanRequest'
+      responses:
+        '200':
+          description: Plan changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/billing/invoices:
+    get:
+      tags: [Billing]
+      summary: List billing invoices
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Invoice list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Invoice'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/billing/webhook:
+    post:
+      tags: [Billing]
+      summary: Receive billing provider webhook events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingWebhookEvent'
+      responses:
+        '200':
+          description: Event processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessOnlyResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    JobIdPath:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BudgetIdPath:
+      name: budgetId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    DateFrom:
+      name: dateFrom
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    DateTo:
+      name: dateTo
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+    BudgetStatus:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [draft, ready, exported, delivered, error]
+    SupplierName:
+      name: supplier
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 120
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: VALIDATION_ERROR
+              message: Invalid request payload
+              details:
+                field: email
+                issue: Invalid format
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: UNAUTHORIZED
+              message: Missing or invalid token
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: NOT_FOUND
+              message: Resource not found
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: INTERNAL_ERROR
+              message: Unexpected server error
+
+  schemas:
+    SuccessOnlyResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          minLength: 20
+
+    RefreshSessionResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Session'
+
+    AuthSuccessResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required: [user, session]
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            session:
+              $ref: '#/components/schemas/Session'
+
+    User:
+      type: object
+      required: [id, email, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+
+    Session:
+      type: object
+      required: [accessToken, refreshToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          minimum: 1
+
+    ProfilePreferences:
+      type: object
+      required: [defaultOutputFormat, defaultDeliveryChannel, preferredCurrency]
+      properties:
+        defaultOutputFormat:
+          type: string
+          enum: [excel, sheets]
+        defaultDeliveryChannel:
+          type: string
+          enum: [email, share_link]
+        preferredCurrency:
+          type: string
+          enum: [ARS, USD]
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdatePreferencesRequest:
+      type: object
+      properties:
+        defaultOutputFormat:
+          type: string
+          enum: [excel, sheets]
+        defaultDeliveryChannel:
+          type: string
+          enum: [email, share_link]
+        preferredCurrency:
+          type: string
+          enum: [ARS, USD]
+
+    CreateAudioJobRequest:
+      type: object
+      required: [sourceType, audioFile]
+      properties:
+        sourceType:
+          type: string
+          enum: [whatsapp_audio]
+        audioFile:
+          type: string
+          format: binary
+        conversationRef:
+          type: string
+          maxLength: 120
+
+    RetryAudioJobRequest:
+      type: object
+      properties:
+        retryReason:
+          type: string
+          maxLength: 300
+
+    AudioJob:
+      type: object
+      required: [id, sourceType, status, retryCount, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceType:
+          type: string
+          enum: [whatsapp_audio]
+        status:
+          type: string
+          enum: [queued, processing, ready, error]
+        retryCount:
+          type: integer
+          minimum: 0
+          maximum: 3
+        createdAt:
+          type: string
+          format: date-time
+
+    AudioJobStatus:
+      allOf:
+        - $ref: '#/components/schemas/AudioJob'
+        - type: object
+          properties:
+            progressPct:
+              type: number
+              minimum: 0
+              maximum: 100
+            budgetId:
+              type: string
+              format: uuid
+              nullable: true
+            errorCode:
+              type: string
+              nullable: true
+
+    BudgetSummary:
+      type: object
+      required: [id, title, status, total, currency, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 120
+        status:
+          type: string
+          enum: [draft, ready, exported, delivered, error]
+        total:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          enum: [ARS, USD]
+        supplierName:
+          type: string
+          maxLength: 120
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Budget:
+      type: object
+      required: [id, title, status, currency, subtotal, total, items, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 120
+        status:
+          type: string
+          enum: [draft, ready, exported, delivered, error]
+        currency:
+          type: string
+          enum: [ARS, USD]
+        subtotal:
+          type: number
+          minimum: 0
+        total:
+          type: number
+          minimum: 0
+        items:
+          type: array
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/BudgetItem'
+        confidenceFlags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BudgetItem:
+      type: object
+      required: [id, description, quantity, unitPrice, lineTotal]
+      properties:
+        id:
+          type: string
+          format: uuid
+        description:
+          type: string
+          minLength: 1
+          maxLength: 240
+        quantity:
+          type: number
+          exclusiveMinimum: 0
+        unitPrice:
+          type: number
+          minimum: 0
+        lineTotal:
+          type: number
+          minimum: 0
+        supplierName:
+          type: string
+          maxLength: 120
+          nullable: true
+        confidenceScore:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+
+    CreateBudgetRequest:
+      type: object
+      required: [title, currency]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        currency:
+          type: string
+          enum: [ARS, USD]
+        supplierName:
+          type: string
+          maxLength: 120
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BudgetItemPatch'
+
+    UpdateBudgetRequest:
+      type: object
+      required: [patches]
+      properties:
+        patches:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BudgetItemPatch'
+
+    BudgetItemPatch:
+      type: object
+      required: [itemId, field, value]
+      properties:
+        itemId:
+          type: string
+          format: uuid
+        field:
+          type: string
+          enum: [description, quantity, unitPrice, supplierName, currency]
+        value:
+          oneOf:
+            - type: string
+            - type: number
+
+    CreateBudgetVersionRequest:
+      type: object
+      required: [versionLabel]
+      properties:
+        versionLabel:
+          type: string
+          minLength: 1
+          maxLength: 80
+        notes:
+          type: string
+          maxLength: 500
+
+    BudgetVersion:
+      type: object
+      required: [id, budgetId, versionNumber, versionLabel, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        budgetId:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          minimum: 1
+        versionLabel:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    DuplicateBudgetRequest:
+      type: object
+      properties:
+        newTitle:
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    DuplicateBudgetResponseData:
+      type: object
+      required: [newBudgetId, sourceBudgetId]
+      properties:
+        newBudgetId:
+          type: string
+          format: uuid
+        sourceBudgetId:
+          type: string
+          format: uuid
+
+    GoogleSheetsExportRequest:
+      type: object
+      properties:
+        sheetTitle:
+          type: string
+          maxLength: 120
+        folderId:
+          type: string
+          maxLength: 120
+
+    ExportResult:
+      type: object
+      required: [id, format, status, fileUrl, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        format:
+          type: string
+          enum: [excel, google_sheets]
+        status:
+          type: string
+          enum: [completed, failed]
+        fileUrl:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateDeliveryRequest:
+      type: object
+      required: [channel]
+      properties:
+        channel:
+          type: string
+          enum: [email, share_link]
+        emails:
+          type: array
+          items:
+            type: string
+            format: email
+        expiresInHours:
+          type: integer
+          minimum: 1
+          maximum: 168
+
+    Delivery:
+      type: object
+      required: [id, budgetId, channel, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        budgetId:
+          type: string
+          format: uuid
+        channel:
+          type: string
+          enum: [email, share_link]
+        status:
+          type: string
+          enum: [queued, sent, failed]
+        target:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    UsageSummary:
+      type: object
+      required: [planName, quotaLimit, quotaUsed, quotaRemaining, renewalDate]
+      properties:
+        planName:
+          type: string
+          enum: [free, basico, pro, profesional]
+        quotaLimit:
+          type: integer
+          minimum: 0
+        quotaUsed:
+          type: integer
+          minimum: 0
+        quotaRemaining:
+          type: integer
+          minimum: 0
+        renewalDate:
+          type: string
+          format: date-time
+
+    Subscription:
+      type: object
+      required: [planName, status, monthlyQuota, renewalDate]
+      properties:
+        planName:
+          type: string
+          enum: [free, basico, pro, profesional]
+        status:
+          type: string
+          enum: [active, past_due, canceled]
+        monthlyQuota:
+          type: integer
+          minimum: 0
+        renewalDate:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChangePlanRequest:
+      type: object
+      required: [targetPlan, effectiveMode]
+      properties:
+        targetPlan:
+          type: string
+          enum: [free, basico, pro, profesional]
+        effectiveMode:
+          type: string
+          enum: [immediate, next_cycle]
+        paymentMethod:
+          type: string
+          description: Optional override for selected payment method (required for paid plans)
+          maxLength: 50
+
+    PaymentMethodOption:
+      type: object
+      required: [code, label, enabled]
+      properties:
+        code:
+          type: string
+          maxLength: 50
+        label:
+          type: string
+          maxLength: 100
+        enabled:
+          type: boolean
+
+    SetDefaultPaymentMethodRequest:
+      type: object
+      required: [paymentMethod]
+      properties:
+        paymentMethod:
+          type: string
+          maxLength: 50
+
+    CreateCheckoutLinkRequest:
+      type: object
+      required: [targetPlan, effectiveMode, paymentMethod]
+      properties:
+        targetPlan:
+          type: string
+          enum: [basico, pro, profesional]
+        effectiveMode:
+          type: string
+          enum: [immediate, next_cycle]
+        paymentMethod:
+          type: string
+          maxLength: 50
+
+    CheckoutLinkResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required: [checkoutUrl, expiresAt, status]
+          properties:
+            checkoutUrl:
+              type: string
+              format: uri
+            expiresAt:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum: [pending_payment, paid, failed, expired]
+
+    Invoice:
+      type: object
+      required: [id, amount, currency, status, issuedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          enum: [USD, ARS]
+        status:
+          type: string
+          enum: [paid, open, past_due, canceled]
+        issuedAt:
+          type: string
+          format: date-time
+        receiptUrl:
+          type: string
+          format: uri
+          nullable: true
+
+    BillingWebhookEvent:
+      type: object
+      required: [eventId, eventType, occurredAt, payload]
+      properties:
+        eventId:
+          type: string
+          maxLength: 120
+        eventType:
+          type: string
+          enum:
+            - subscription.updated
+            - subscription.canceled
+            - invoice.paid
+            - invoice.payment_failed
+            - checkout.expired
+        occurredAt:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: true
+
+    Pagination:
+      type: object
+      required: [page, pageSize, totalItems, totalPages]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        totalItems:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
