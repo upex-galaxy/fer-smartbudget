@@ -1,6 +1,7 @@
 'use client';
 
 import { Menu, UserRound } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,13 @@ type NavbarProps = {
 };
 
 export function Navbar({ onOpenMobileMenu }: NavbarProps) {
+  const router = useRouter();
   const { user, logout } = useAuth();
+
+  async function handleLogout() {
+    await logout();
+    router.push('/login');
+  }
 
   return (
     <header
@@ -44,7 +51,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
           </span>
         </div>
         <Button
-          onClick={() => void logout()}
+          onClick={() => void handleLogout()}
           size="sm"
           variant="outline"
           data-testid="logout_button"

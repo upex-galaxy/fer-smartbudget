@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -29,8 +29,6 @@ export function MainLayout({ pageTitle, pageDescription, children }: MainLayoutP
   useEffect(() => {
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
-
-  const navLinks = useMemo(() => APP_NAV_ITEMS.slice(0, 4), []);
 
   return (
     <div className="min-h-screen bg-brand-radial">
@@ -61,7 +59,7 @@ export function MainLayout({ pageTitle, pageDescription, children }: MainLayoutP
                   </Button>
                 </div>
                 <nav className="space-y-2" data-testid="mobile_menu_nav">
-                  {navLinks.map(link => (
+                  {APP_NAV_ITEMS.map(link => (
                     <Link
                       key={link.href}
                       href={link.href}
