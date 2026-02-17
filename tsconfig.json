@@ -4,8 +4,13 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["bun-types", "node"],
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
@@ -13,8 +18,22 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "allowJs": true,
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["scripts/**/*.ts", "**/*.ts", "scripts/spike/xraycli/tsconfig.json"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "scripts/**/*.ts",
+    "scripts/spike/xraycli/tsconfig.json",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules", ".backups"]
 }
